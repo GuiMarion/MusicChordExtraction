@@ -18,9 +18,6 @@ BASS = 1
 OCTAVE = 12
 
 PACKAGE_DIR = os.path.realpath(os.path.dirname(__file__))
-BACH_DATASET = os.path.join(PACKAGE_DIR,
-                            'datasets/raw_dataset/bach_dataset.pickle'
-                            )
 
 voice_ids_default = list(range(NUM_VOICES))  # soprano, alto, tenor, bass
 
@@ -203,78 +200,6 @@ def create_index_dicts(chorale_list, voice_ids=voice_ids_default):
     return index2notes, note2indexes
 
 
-# def make_dataset(chorale_list, dataset_name, voice_ids=voice_ids_default,
-#                  transpose=False, metadatas=None):
-#     X = []
-#     X_metadatas = []
-#     index2notes, note2indexes = create_index_dicts(chorale_list,
-#                                                    voice_ids=voice_ids)
-
-#     # todo clean this part
-#     min_max_midi_pitches = np.array(
-#         list(map(lambda d: _min_max_midi_pitch(d.values()), index2notes)))
-#     min_midi_pitches = min_max_midi_pitches[:, 0]
-#     max_midi_pitches = min_max_midi_pitches[:, 1]
-#     for chorale_file in tqdm(chorale_list):
-#         try:
-#             chorale = converter.parse(chorale_file)
-#             if transpose:
-#                 midi_pitches = [
-#                     [n.pitch.midi for n in chorale.parts[voice_id].flat.notes]
-#                     for voice_id in voice_ids]
-#                 min_midi_pitches_current = np.array(
-#                     [min(l) for l in midi_pitches])
-#                 max_midi_pitches_current = np.array(
-#                     [max(l) for l in midi_pitches])
-#                 min_transposition = max(
-#                     min_midi_pitches - min_midi_pitches_current)
-#                 max_transposition = min(
-#                     max_midi_pitches - max_midi_pitches_current)
-#                 for semi_tone in range(min_transposition,
-#                                        max_transposition + 1):
-#                     try:
-#                         # necessary, won't transpose correctly otherwise
-#                         interval_type, interval_nature = interval.convertSemitoneToSpecifierGeneric(
-#                             semi_tone)
-#                         transposition_interval = interval.Interval(
-#                             str(interval_nature) + interval_type)
-#                         chorale_tranposed = chorale.transpose(
-#                             transposition_interval)
-#                         inputs = chorale_to_inputs(chorale_tranposed,
-#                                                    voice_ids=voice_ids,
-#                                                    index2notes=index2notes,
-#                                                    note2indexes=note2indexes
-#                                                    )
-#                         md = []
-#                         if metadatas:
-#                             for metadata in metadatas:
-#                                 # todo add this
-#                                 if metadata.is_global:
-#                                     pass
-#                                 else:
-#                                     md.append(
-#                                         metadata.evaluate(chorale_tranposed))
-#                         X.append(inputs)
-#                         X_metadatas.append(md)
-#                     except KeyError:
-#                         print('KeyError: File ' + chorale_file + ' skipped')
-#                     except FloatingKeyException:
-#                         print(
-#                             'FloatingKeyException: File ' + chorale_file + ' skipped')
-#             else:
-#                 print("Warning: no transposition! shouldn't be used!")
-#                 inputs = chorale_to_inputs(chorale, voice_ids=voice_ids,
-#                                            index2notes=index2notes,
-#                                            note2indexes=note2indexes)
-#                 X.append(inputs)
-
-#         except (AttributeError, IndexError):
-#             pass
-
-#     dataset = (X, X_metadatas, voice_ids, index2notes, note2indexes, metadatas)
-#     pickle.dump(dataset, open(dataset_name, 'wb'), pickle.HIGHEST_PROTOCOL)
-#     print(str(len(X)) + ' files written in ' + dataset_name)
-
 def make_dataset(chorale_list, dataset_name, voice_ids=voice_ids_default,
                  transpose=False, metadatas=None):
 
@@ -288,7 +213,7 @@ def make_dataset(chorale_list, dataset_name, voice_ids=voice_ids_default,
             chorale = converter.parse(chorale_file)
             inputs = chorale_to_inputs(chorale, voice_ids=voice_ids, index2notes=index2notes, note2indexes=note2indexes)
             X.append(inputs)
-        except AssertionError:
+        except (AssertionError, AttributeError):
             pass
 
 
@@ -339,7 +264,7 @@ def pickled_dataset_path(dataset_dir):
     # last non-empty part is the dataset name
     dataset_name = [el for el in dataset_dir.split('/') if el][-1]
     return os.path.join(PACKAGE_DIR,
-                        'DeepBach/datasets/custom_dataset',
+                        'DataRepresentations',
                         dataset_name + '.pickle')
 
 def part_to_inputs(part, length, index2note, note2index):
@@ -423,7 +348,7 @@ def PrintRepresentation(pickled_dataset):
     print("Here is a graphical representation of the data")
     print()
 
-    pickled_dataset = PACKAGE_DIR+"/DeepBach/datasets/custom_dataset/" + pickled_dataset + ".pickle"
+    pickled_dataset = PACKAGE_DIR+"/DataRepresentations/" + pickled_dataset + ".pickle"
     X, X_metadatas, voice_ids, index2notes, note2indexes, metadatas = pickle.load(
             open(pickled_dataset, 'rb'))
     #print("X : ")
@@ -485,7 +410,7 @@ def PrintRepresentationSeparetly(pickled_dataset):
     print()
     print("Here is a graphical representation of the data")
     print()
-    pickled_dataset = PACKAGE_DIR+"/DeepBach/datasets/custom_dataset/" + pickled_dataset + ".pickle"
+    pickled_dataset = PACKAGE_DIR+"/DataRepresentations/" + pickled_dataset + ".pickle"
     X, X_metadatas, voice_ids, index2notes, note2indexes, metadatas = pickle.load(
             open(pickled_dataset, 'rb'))
     print()
