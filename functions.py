@@ -7,6 +7,7 @@ from music21.analysis.floatingKey import FloatingKeyException
 from tqdm import tqdm
 from Chords import *
 
+
 NUM_VOICES = 3
 
 SUBDIVISION = 4  # quarter note subdivision
@@ -148,43 +149,55 @@ def create_index_dicts(chorale_list, voice_ids=voice_ids_default):
     :param max_pitches:
     :return:
     """
-    # store all notes
+
+    # store all faisible notes 
+    notes = ['A','B','C','D','E','F','G','A-','B-',\
+     'C-','D-','E-','F-','G-', 'A#','B#','C#','D#','E#','F#','G#']
+
     voice_ranges = []
 
-    # We fill the voicerange of the melody
-    #molodyVoice = [voice_ids[0]]
-    for voice_id in [0,1,2]:
-        voice_range = set()
-        for chorale_path in chorale_list:
-            # todo transposition
-            chorale = converter.parse(chorale_path)
-            part = chorale.parts[1].flat
-            for n in part.notesAndRests:
-                voice_range.add(standard_name(n))
-        # add additional symbols
-        voice_range.add(SLUR_SYMBOL)
-        voice_range.add(START_SYMBOL)
-        voice_range.add(END_SYMBOL)
-        voice_ranges.append(voice_range)
+    # We fill the voicerange of the melody with the exact teissiture of our dataset
+    MelodyRange = []
+    MelodyRange.append('rest')
+    MelodyRange.append(SLUR_SYMBOL)
+    MelodyRange.append(START_SYMBOL)
+    MelodyRange.append(END_SYMBOL)
 
-    # We fill the voicerange of the chords
+    r = getRange(chorale_list)
+    for i in range(int(r[0][-1]), int(r[1][-1])+1):
+        for elem in notes:
+            MelodyRange.append(elem+str(i))
 
-    # chordsRootRange = {'A','B','C','D','E','F','G','Ab','Bb',\
-    # 'Cb','Db','Eb','Fb','Gb', 'A#','B#','C#','D#','E#','F#','G#'}
-    # chordsRootRange.add(SLUR_SYMBOL)
-    # chordsRootRange.add(START_SYMBOL)
-    # chordsRootRange.add(END_SYMBOL)
-    # voice_ranges.append(chordsRootRange)
+    voice_ranges.append(MelodyRange)
 
-    # # Maybe to reconsider, I used this document http://www.tsmp.org/keyboard/lias/pdf/symbols.pdf
-    # chordsColorRange = {'','min', 'dim', '#5', 'maj7', 'min7', '7', 'dim7', 'm7b5', '9', 'm9', 'maj9', '11', '13'}
-    # chordsColorRange.add(SLUR_SYMBOL)
-    # chordsColorRange.add(START_SYMBOL)
-    # chordsColorRange.add(END_SYMBOL)
-    # voice_ranges.append(chordsColorRange)
+
+    # # We fill the voicerange of the chords
+    chordsRootRange = []
+    chordsRootRange0 = ['A','B','C','D','E','F','G','A-','B-',\
+    'C-','D-','E-','F-','G_', 'A#','B#','C#','D#','E#','F#','G#']
+    chordsRootRange.append('rest')
+    chordsRootRange.append(SLUR_SYMBOL)
+    chordsRootRange.append(START_SYMBOL)
+    chordsRootRange.append(END_SYMBOL)
+    for elem in chordsRootRange0:
+        chordsRootRange.append(elem)
+    voice_ranges.append(chordsRootRange)
+
+    # # We fill the last voice containing the color of the chords
+    chordsColorRange = [] 
+    chordsColorRange0 = ['maj','min', "min#5",  'dim', '+', 'maj7',"min(maj7)", 'min7', '7',"7sus4", "7b5", "7+", 'dim7', 'm7b5', '9', 'm9',\
+     "min6", '6', 'maj9',  "7b9", "7b5b9", "9", "sus49", "#59", "7#5b9", "#5#9", "7#9", "713", "7b5#9", "min11", '11', "7alt", "69", "min69", \
+     "9#11", "7#11", "7sus", "7sus43", '13']
+    chordsColorRange.append('rest')
+    chordsColorRange.append(SLUR_SYMBOL)
+    chordsColorRange.append(START_SYMBOL)
+    chordsColorRange.append(END_SYMBOL)
+    for elem in chordsColorRange0:
+        chordsColorRange.append(elem)
+    voice_ranges.append(chordsColorRange)
+
 
     # create tables
-
 
     index2notes = []
     note2indexes = []
@@ -197,6 +210,11 @@ def create_index_dicts(chorale_list, voice_ids=voice_ids_default):
             note2index.update({n: k})
         index2notes.append(index2note)
         note2indexes.append(note2index)
+
+    # Print indexes
+    #for elem in index2notes:
+    #    print(elem)
+
     return index2notes, note2indexes
 
 
@@ -214,6 +232,7 @@ def make_dataset(chorale_list, dataset_name, voice_ids=voice_ids_default,
             inputs = chorale_to_inputs(chorale, voice_ids=voice_ids, index2notes=index2notes, note2indexes=note2indexes)
             X.append(inputs)
         except (AssertionError, AttributeError):
+            print(chorale_file)
             pass
 
 
@@ -279,10 +298,14 @@ def part_to_inputs(part, length, index2note, note2index):
     list_notes = part.flat.notes
     list_note_strings = [n.nameWithOctave for n in list_notes]
 
-    # add entries to dictionaries if not present
-    # should only be called by make_dataset when transposing
+    # add entries to dictionaries if not present should not be called, just here for debug
     for note_name in list_note_strings:
         if note_name not in index2note.values():
+            print("___________")
+            print("Illegaly adding entries to indexes, should never append,\ncheck create_index_dicts function. It should be missing tis note : ")
+            print(note_name)
+            print("___________")
+            print()
             new_index = len(index2note)
             index2note.update({new_index: note_name})
             note2index.update({note_name: new_index})
@@ -405,6 +428,7 @@ def PrintRepresentation(pickled_dataset):
 
 
 
+
 def PrintRepresentationSeparetly(pickled_dataset):
 
     print()
@@ -431,3 +455,36 @@ def PrintRepresentationSeparetly(pickled_dataset):
         print()
         print("Another One")
         print()
+
+
+def getRange(chorale_list):
+    L = []
+
+    for chorale_path in chorale_list:
+        chorale = converter.parse(chorale_path)
+        part = chorale.parts[1].flat
+        for n in part.notesAndRests:
+            if standard_name(n) not in ['rest', 'None', None] :
+                L.append(standard_name(n))
+
+    Oct = set()
+
+    for elem in L:
+        Oct.add(elem[-1])
+
+    L1 = set()
+
+    for elem in L:
+        if elem[-1] == min(Oct):
+            L1.add(elem[:-1])
+
+    L2 = set()
+
+    for elem in L:
+        if elem[-1] == max(Oct):
+            L2.add(elem[:-1])
+
+    print("The range for this dataset is between", min(L1)+min(Oct), "and", max(L2)+max(Oct))
+
+    return (min(L1)+min(Oct), max(L2)+max(Oct))
+
