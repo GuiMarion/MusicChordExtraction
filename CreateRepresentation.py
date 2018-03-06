@@ -5,8 +5,8 @@ from metadata import *
 from functions import *
 
 metadatas = [TickMetadatas(SUBDIVISION), FermataMetadatas(), KeyMetadatas(window_size=1)]
-dataset_path = "DataWithChords"
-#dataset_path = "1fileData"
+#dataset_path = "DataWithChords"
+dataset_path = "1fileData"
 #dataset_path = "Triolets"
 
 pickled_dataset = pickled_dataset_path(dataset_path)

@@ -237,6 +237,9 @@ def make_dataset(chorale_list, dataset_name, voice_ids=voice_ids_default,
 
 
     dataset = (X, X_metadatas, voice_ids, index2notes, note2indexes, metadatas)
+    print("PDDDD", X_metadatas)
+    #metadatas[0].num_values = 16
+    #print("PDD",metadatas[0].generate(32))
     pickle.dump(dataset, open(dataset_name, 'wb'), pickle.HIGHEST_PROTOCOL)
     print(str(len(X)) + ' files written in ' + dataset_name)
 
