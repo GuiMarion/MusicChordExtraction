@@ -231,13 +231,21 @@ def make_dataset(chorale_list, dataset_name, voice_ids=voice_ids_default,
             chorale = converter.parse(chorale_file)
             inputs = chorale_to_inputs(chorale, voice_ids=voice_ids, index2notes=index2notes, note2indexes=note2indexes)
             X.append(inputs)
+            md = []
+            if metadatas:
+                for metadata in metadatas:
+                    # todo add this
+                    if metadata.is_global:
+                        pass
+                    else:
+                        md.append(metadata.evaluate(chorale))
+            X_metadatas.append(md)
         except (AssertionError, AttributeError):
             print(chorale_file)
             pass
 
 
     dataset = (X, X_metadatas, voice_ids, index2notes, note2indexes, metadatas)
-    print("PDDDD", X_metadatas)
     #metadatas[0].num_values = 16
     #print("PDD",metadatas[0].generate(32))
     pickle.dump(dataset, open(dataset_name, 'wb'), pickle.HIGHEST_PROTOCOL)
