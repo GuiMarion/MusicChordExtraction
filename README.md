@@ -10,3 +10,5 @@ CreateRepresentation.py is the starting point of the project. So, to get started
 	python3 CreateRepresentation.py
 
 To extract informations from another dataset, you can change the name of the directory in CreateRepresentation.py
+
+Attention, the program assume that the chords are in first inversion !!
